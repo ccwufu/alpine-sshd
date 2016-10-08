@@ -6,7 +6,8 @@ MAINTAINER wufu cc ccwufu@gmail.com
 RUN apk --no-cache add openssh
 
 # add entrypoint script
-ADD docker-entrypoint.sh /usr/sbin && RUN chmod +x /usr/sbin/docker-entrypoint.sh
+ADD docker-entrypoint.sh /usr/sbin
+RUN chmod +x /usr/sbin/docker-entrypoint.sh
 #make sure we get fresh keys
 RUN rm -rf /etc/ssh/ssh_host_rsa_key /etc/ssh/ssh_host_dsa_key
 
