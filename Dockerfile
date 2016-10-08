@@ -11,5 +11,5 @@ ADD docker-entrypoint.sh /usr/sbin
 RUN rm -rf /etc/ssh/ssh_host_rsa_key /etc/ssh/ssh_host_dsa_key
 
 EXPOSE 22
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["/usr/sbin/docker-entrypoint.sh"]
 CMD ["/usr/sbin/sshd","-D"]
