@@ -8,6 +8,15 @@ if [ ! -f "/etc/ssh/ssh_host_dsa_key" ]; then
 	# generate fresh dsa key
 	ssh-keygen -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
 fi
+if [ ! -f "/etc/ssh/ssh_host_ed25519_key" ]; then
+	# generate fresh ssh_host_ed25519_key key
+	ssh-keygen -f /etc/ssh/ssh_host_ed25519_key -N '' -t ed25519
+fi
+
+if [ ! -f "/etc/ssh/ssh_host_ecdsa_key" ]; then
+	# generate fresh ssh_host_ecdsa_key key
+	ssh-keygen -f /etc/ssh/ssh_host_ecdsa_key -N '' -t ecdsa
+fi
 
 #prepare run dir
 if [ ! -d "/var/run/sshd" ]; then
