@@ -9,9 +9,9 @@ RUN apk --no-cache add bash openssh \
 
 EXPOSE 443
 
-COPY entry.sh /entry.sh
-RUN chmod 755 /entry.sh
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod 755 /docker-entrypoint.sh
 
-ENTRYPOINT ["/entry.sh"]
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
 CMD ["/usr/sbin/sshd", "-D", "-f", "/etc/ssh/sshd_config"]
