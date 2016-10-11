@@ -1,26 +1,54 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-if [ ! -f "/etc/ssh/ssh_host_rsa_key" ]; then
-	# generate fresh rsa key
-	ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa
-fi
-if [ ! -f "/etc/ssh/ssh_host_dsa_key" ]; then
-	# generate fresh dsa key
-	ssh-keygen -f /etc/ssh/ssh_host_dsa_key -N '' -t dsa
-fi
-if [ ! -f "/etc/ssh/ssh_host_ed25519_key" ]; then
-	# generate fresh ssh_host_ed25519_key key
-	ssh-keygen -f /etc/ssh/ssh_host_ed25519_key -N '' -t ed25519
+set -e
+
+[ "$DEBUG" == 'true' ] && set -x
+
+DAEMON=sshd
+
+# Generate Host keys, if required
+if ! ls /etc/ssh/ssh_host_* 1> /dev/null 2>&1; then
+  ssh-keygen -A
 fi
 
-if [ ! -f "/etc/ssh/ssh_host_ecdsa_key" ]; then
-	# generate fresh ssh_host_ecdsa_key key
-	ssh-keygen -f /etc/ssh/ssh_host_ecdsa_key -N '' -t ecdsa
+# Allow a key to be passed in via env
+if [ -n "$AUTHORIZED_KEY" ]; then
+    echo "$AUTHORIZED_KEY" >> ~/.ssh/authorized_keys
 fi
 
-#prepare run dir
-if [ ! -d "/var/run/sshd" ]; then
-  mkdir -p /var/run/sshd
+# Fix permissions, if writable
+if [ -w ~/.ssh ]; then
+  chown root:root ~/.ssh && chmod 700 ~/.ssh/
+fi
+if [ -w ~/.ssh/authorized_keys ]; then
+  chown root:root ~/.ssh/authorized_keys
+  chmod 600 ~/.ssh/authorized_keys
 fi
 
-exec "$@"
+# Warn if no config
+if [ ! -e ~/.ssh/authorized_keys ]; then
+  echo "WARNING: No SSH authorized_keys found for root"
+fi
+
+stop() {
+  echo "Received SIGINT or SIGTERM. Shutting down $DAEMON"
+  # Get PID
+  pid=$(cat /var/run/$DAEMON/$DAEMON.pid)
+  # Set TERM
+  kill -SIGTERM "${pid}"
+  # Wait for exit
+  wait "${pid}"
+  # All done.
+  echo "Done."
+}
+
+echo "Running $@"
+if [ "$(basename $1)" == "$DAEMON" ]; then
+  trap stop SIGINT SIGTERM
+  $@ &
+  pid="$!"
+  mkdir -p /var/run/$DAEMON && echo "${pid}" > /var/run/$DAEMON/$DAEMON.pid
+  wait "${pid}" && exit $?
+else
+  exec "$@"
+fi
